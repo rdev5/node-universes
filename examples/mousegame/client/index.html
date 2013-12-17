@@ -5,6 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=Edge">
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
         <script type="text/javascript" src="/primus/primus.js"></script>
+        <script type="text/javascript" src="client.js"></script>
         <script type="text/javascript">
             function timestamp() {
                 var curdate = new Date();
@@ -45,10 +46,15 @@
             }
 
             var startInfo = window.location.hash.split('#');
-            var myName = startInfo[1];
-            var myColor = '#' + startInfo[2];
-            var myX = parseInt(Math.random() * 400 + 30);
-            var myY = parseInt(Math.random() * 400 + 30);
+            var myName = getParameterByName('name') !== '' ? getParameterByName('name') : startInfo[1];
+            var myColor = getParameterByName('color') !== '' ? '#' + getParameterByName('color') : '#' + startInfo[2];
+            var myX = getRandomInt(0, 1200);
+            var myY = getRandomInt(0, 400);
+
+            if (myName == undefined) {
+                myName = 'Guest';
+                myColor = '#000000';
+            }
 
             var oPlayers = [];
 
@@ -156,6 +162,64 @@
                 });
             }
 
+            function translate(x, y) {
+                var left = myX, //parseInt( css( elem, 'left' ), 10 ),
+                    top = myY, // parseInt( css( elem, 'top' ), 10 ),
+                    dx = left - x,
+                    dy = top - y,
+                    i = 1,
+                    count = 50,
+                    delay = 0;
+
+                    function loop() {
+                        if ( i >= count ) { return; }
+                        i += 1;
+                        moveTo( (( left - ( dx * i / count ) ).toFixed( 0 )),  (( top - ( dy * i / count ) ).toFixed( 0 )) );
+                        setTimeout( loop, delay );
+                    }
+
+
+                loop();
+            }
+
+            function MoveAI() {
+                var limit_x = $('canvas#game').width() / 2;
+                var limit_y = $('canvas#game').height() / 2;
+
+                var distanceX = getRandomInt(50, 100);
+                var distanceY = getRandomInt(50, 100);
+                var new_x = getRandomInt(0,1) == 0 ? myX + distanceX: myX - distanceX;
+                var new_y = getRandomInt(0,1) == 0 ? myY - distanceY: myY + distanceY;
+
+                // Handle limits
+                if (new_x <= 0) new_x = 0;
+                if (new_y <= 0) new_y = 0;
+                if (new_x >= limit_x) new_x = limit_x;
+                if (new_y >= limit_y) new_y = limit_y;
+
+                var dir_x, dir_y;
+
+                if (new_x > myX) dir_x = -1
+                else if (new_x < myX) dir_x = 1
+                else dir_x = 0;
+                    
+                if (new_y > myY) dir_y = -1
+                else if (new_y < myY) dir_y = 1
+                else dir_y = 0;
+
+                translate(new_x, new_y);
+
+                setTimeout(MoveAI, 1000);
+            }
+
+            function sleep(millis)
+            {
+                var date = new Date();
+                var curDate = null;
+                do { curDate = new Date(); }
+                while(curDate-date < millis);
+            }
+
             $(document).ready(function() {
                 canvas = $('#game')[0].getContext("2d");
 
@@ -167,6 +231,13 @@
                 });
 
                 startConn();
+
+                if (getParameterByName('ai') == 'true') {
+                    MoveAI();
+                } else {
+                    window.open('index.html?ai=true&name=Bob&color=ff0000', '_ai1', 'width=1,height=1');
+                    window.open('index.html?ai=true&name=Bob2&color=ff0000', '_ai2', 'width=1,height=1');
+                }
             });
         </script>
     </head>
